@@ -2,13 +2,27 @@ FROM ubuntu:latest
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt update
-RUN apt install -y git-all
+RUN apt-get update \
+    && apt-get install -y git-all openssh-server
 
-RUN adduser git
-RUN su git
+COPY sshd_config /etc/ssh/sshd_config
 
+# user git
+RUN adduser git \
+    && echo 'git:password' | chpasswd
+
+# adding ssh key to home/git/.ssh/authorized_keys
 WORKDIR /home/git
 RUN mkdir .ssh && chmod 700 .ssh
 RUN touch .ssh/authorized_keys && chmod 600 .ssh/authorized_keys
+COPY git-server-docker.pub /tmp/git-server-docker.pub
+RUN cat /tmp/git-server-docker.pub >> /home/git/.ssh/authorized_keys
+RUN rm /tmp/git-server-docker.pub
 
+# creating bare repo for testing
+RUN mkdir project.git
+RUN cd project.git\
+&& git init --bare
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
