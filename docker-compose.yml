@@ -1,8 +1,8 @@
 version: '3.8'
 services:
   dev-git:
-    tty: true
     image: kr/git-server
     container_name: git-server
     ports:
-      - "2222:22"
+      - "22:22"
+  
