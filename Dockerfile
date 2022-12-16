@@ -3,8 +3,8 @@ FROM ubuntu:latest
 # ARG to avoid prompts when installing dependencies
 ARG DEBIAN_FRONTEND=noninteractive
 # Replace below file names with your own keys:
-ARG GIT_PUBLIC_KEY="gitosis-key.pub"
-ARG SSH_PUBLIC_KEY="gitosis-key.pub"
+ARG GIT_PUBLIC_KEY="id_rsa.pub"
+ARG SSH_PUBLIC_KEY="ssh-key.pub"
 
 
 
@@ -13,7 +13,7 @@ RUN apt-get install -y git python2 python-setuptools sudo openssh-server
 
 
 COPY sshd_config /etc/ssh/sshd_config
-# COPY $SSH_PUBLIC_KEY /tmp/$SSH_PUBLIC_KEY
+COPY $SSH_PUBLIC_KEY /tmp/$SSH_PUBLIC_KEY
 COPY $GIT_PUBLIC_KEY /tmp/$GIT_PUBLIC_KEY
 
 
@@ -45,6 +45,7 @@ WORKDIR /tmp
 RUN git clone https://github.com/tv42/gitosis.git
 RUN cd gitosis \
     && python2 setup.py install
+# must run as git user
 USER git
 RUN gitosis-init < /tmp/$GIT_PUBLIC_KEY
 USER root
@@ -53,7 +54,7 @@ RUN chown -R git /srv
 RUN chmod 700 .ssh 
 RUN chmod 600 .ssh/authorized_keys
 
-# RUN rm /tmp/$SSH_PUBLIC_KEY
+RUN rm /tmp/$SSH_PUBLIC_KEY
 RUN rm /tmp/$GIT_PUBLIC_KEY
 
 RUN service ssh start
